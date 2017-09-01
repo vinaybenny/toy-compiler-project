@@ -29,8 +29,8 @@ This by default sets +, -, *,-, \=, etc as defined operators.
 Precedence values from 750 are chosen as the clpfd defined arithmetic
 operators have precedence of 700 and below.
 */
-:- op(750,fx,[if,while]).
-:- op(749,fx,[then,do]).
+:- op(750,fx,if).
+:- op(749,xfx,then).
 :- op(748,xfx,else).
 :- op(747,yf,;). /* Least precedence; statements in input program need to be first broken by semicolons */
 
@@ -53,10 +53,19 @@ for the assigned variable and value. put_assoc/4 is an autoloaded library in Pro
 key value pairs into an association dictionary*/
 interpret( (Var=Expr), Dictin, Dictout):- atom(Var), evaluate(Expr, Val, Dictin), put_assoc(Var, Dictin, Val, Dictout).
 
+interpret( (if Condexpr then { St1 } ), Dictin, Dictout ):- evaluate(Condexpr, Condval, Dictin),
+    (   Condval #= 1
+    ->  interpret(St1, Dictin, Dictout)
+    ;   Dictout =  Dictin).
+interpret( (if Condexpr then { St1 } else { St2 } ), Dictin, Dictout ):- evaluate(Condexpr, Condval, Dictin),
+    (   Condval #= 1
+    ->  interpret(St1, Dictin, Dictout)
+    ;   interpret(St2, Dictin, Dictout)).
+
 
 
 /*******************************************************************************************************
-evaluate/3: These functions will evaluate the arithmetic expressions in
+Evaluate/3: These functions will evaluate the arithmetic expressions in
 the interpreted code. The function breaks down each expression into
 components like integer values, variables and operators. For variables,
 the integer value of that variable is obtained from the dictionary, and
@@ -80,10 +89,16 @@ a double negative or a negative-positive number is specified. eg: b = 1+-2*/
 evaluate(Expr, Val, Dictin):- Expr =..[Op, Right],
     member(Op,[+, -]),
     evaluate(Right, Partval, Dictin),
-    Result =..[Op, Partval],
+    Result =.. [Op, Partval],
     Val #= Result.
-
+/* Handle conditional operators where the Expr evaluates to True =1/False=0. */
+evaluate(Expr, Val, Dictin):- Expr =.. [Op, Left, Right],
+    member(Op,[<, =<, >, >=, =, \=]),
+    evaluate(Left, Partval1, Dictin), evaluate(Right, Partval2, Dictin),
+    atomic_concat('#',Op, Newop), /*  Concatenates # to operator to create a clpfd comparison operator*/
+    Result =.. [Newop, Partval1, Partval2],
+    ( Result -> Val = 1; Val = 0 ).
 
 /*Test Program*/
 
-:-Program = ( a = 24 ; b = a*2 ; c = b + -5 ; ), empty_assoc(XX), interpret(Program, XX, YY).
+:-Program = ( a = 24 ; b = a*2 ; if b == 47 then {c = b + -5} else { c = 4} ; ), empty_assoc(XX), interpret(Program, XX, YY).
