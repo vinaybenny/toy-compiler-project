@@ -8,3 +8,6 @@ Currently this codebase includes an toy interpreter for a hypothetical programmi
 ## Updates- 
 04-Sep-2017
 - A simple interpreter has been completed for a toy language which can perform simple arithmetic operations, conditional branching using if-else, and elementary looping using while-do constructs.
+
+## Upcoming
+- compiler that converts assignments in the toy language into assembly code.
