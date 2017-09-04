@@ -15,6 +15,8 @@ NOTES:
 1. Only integer datatypes are currently defined for the toy language.
 2. Division operator should be "//" instead of "/" as clpfd library
    defines integer division using the "//"
+3. Condition expressios for equality should use "=". This is not counted
+   as assignment when within the condition statements for if and while.
 
 *****************************************************************************************************/
 
